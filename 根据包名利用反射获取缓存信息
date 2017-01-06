@@ -1,0 +1,40 @@
+切记一定要记得拷贝aidl包名
+
+//界面可见的办法
+@Override
+public void onStart() {
+	super.onStart();
+	//开一个字线程重写，run方法
+	new Thread(){
+		public void run() {
+			//遍历所有应用的包名
+				List<PackageInfo> packageInfos = pm.getInstalledPackages(0);
+				for (PackageInfo packageInfo : packageInfos) {
+					final String packname = packageInfo.packageName;
+					//根据包名利用反射获取缓存信息（这个轮子方法可以抽取哟！）
+					Method [] methods = PackageManager.class.getDeclaredMethods();
+					for (Method method : methods) {
+						//如果刚好有“getpackagesize”这一方法
+						if ("getPackageSizeInfo".equals(method.getName())) {
+							//就要对方法进行invoke激活
+							try {
+								method.invoke(pm, packname, new IPackageStatsObserver.Stub() {
+									
+									@Override
+									public void onGetStatsCompleted(PackageStats pStats, boolean succeeded)
+											throws RemoteException {
+										long cacheSize = pStats.cacheSize;
+										System.out.println(packname+"缓存的大小为"+cacheSize);
+									}
+								});
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						
+					}
+				}
+		};
+	}.start();
+}
