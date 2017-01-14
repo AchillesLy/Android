@@ -1,0 +1,97 @@
+在http 协议中，get 请求协议没有请求体，只有请求头和请求行，因此如果想使用get 方式提交数据，只能通过在url 后面加上要提交的参数。这也意味着get 方式只能提交比较小的参数。
+如果get 方式提交的参数有特殊字符或者中文字符那么必须对其进行URL 编码，不然会导致服务器接收到的数据乱码。
+对于post 请求，提交的数据位于请求体中，因此需要设置connection.setDoOutput(true);参数，该参数设置后才允许将提交的数据通过输出流的形式提交。不过需要说明的是虽然采用post 方式提交，依然需要将参数进行URL 编码。
+其实当我们使用浏览器进行form 表单提交的时候，浏览器内部已经帮我们实现了URL编码。因为我们这里是使用代码模拟浏览器的提交数据过程，因此需要使用代码特殊处理。
+Get请求
+代码如下：
+public class MainActivity extends Activity {
+   protected static final int SUCCESS = 1;
+   protected static final int ERROR = 2;
+   private EditText et_qq;
+   private EditText et_pwd;
+   private TextView tv_status;
+  
+   private Handler handler = new Handler(){
+      public void handleMessage(Android.os.Messagemsg) {
+          switch (msg.what) {
+          case ERROR:
+             Toast.makeText(MainActivity.this, "请求失败,请检查网络和服务器的状态", 0).show();
+             break;
+         case SUCCESS:
+             Toast.makeText(MainActivity.this, (String)msg.obj, 0).show();
+             tv_status.setText("当前状态:"+ (String)msg.obj);
+             break;
+          }
+      };
+   };
+ 
+    @Override
+    protected void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+       setContentView(R.layout.activity_main);
+        et_qq = (EditText) findViewById(R.id.et_qq);
+        et_pwd = (EditText) findViewById(R.id.et_pwd);
+        tv_status = (TextView) findViewById(R.id.tv_status);
+    }
+    
+    public void login(View view){
+       //http://localhost:8080/web/LoginServlet?qq=10000&pwd=abcde
+       final String qq = et_qq.getText().toString().trim();
+       final String pwd = et_pwd.getText().toString().trim();
+       if(TextUtils.isEmpty(qq)||TextUtils.isEmpty(pwd)){
+          Toast.makeText(this, "qq或者密码不能为空", 0).show();
+          return;
+       }
+       new Thread(){
+          public void run() {
+             try {
+                String path = "http://192.168.1.103:8080/web/LoginServlet?qq="
+                +URLEncoder.encode(qq, "utf-8")+"&pwd="
+                +URLEncoder.encode(pwd, "utf-8");
+                URLurl = new URL(path);
+                HttpURLConnectionconn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setConnectTimeout(5000);
+                int code = conn.getResponseCode();
+                if(code == 200){
+                   InputStreamis = conn.getInputStream();
+                   Stringresult = StreamTools.readStream(is);
+                   Messagemsg = Message.obtain();
+                   msg.what = SUCCESS;
+                   msg.obj = result;
+                   handler.sendMessage(msg);
+                }else{
+                   Messagemsg = Message.obtain();
+                   msg.what = ERROR;
+                   handler.sendMessage(msg);
+                }
+             } catch (Exception e) {
+                e.printStackTrace();
+                Messagemsg = Message.obtain();
+                msg.what = ERROR;
+                handler.sendMessage(msg);
+             }
+          };
+       }.start();
+    }
+}
+上述涉及到控件初始化，以及handler消息处理的一些代码在这里先给贴了出来，在后面讲到其他请求方式上传数据的时候由于这些代码都是重复的就没必要再继续贴出来了。
+ 
+Post请求
+在子线程的run方法中是我们写请求网络的代码，这里我们使用post的方式操作代码如下：
+URL url = new URL(path);
+                HttpURLConnectionconn = (HttpURLConnection) url.openConnection();
+                //1.设置请求方式为POST
+                conn.setRequestMethod("POST"); //注意单词必须大写.
+                conn.setConnectTimeout(5000);
+                //2.设置http请求数据的类型为表单类型
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                //3.设置给服务器写的数据的长度
+                //qq=10000&pwd=abcde
+                Stringdata = "qq="+URLEncoder.encode(qq, "utf-8")+"&pwd="+URLEncoder.encode(pwd, "utf-8");
+                conn.setRequestProperty("Content-Length", String.valueOf(data.length()));
+                //4.记得指定要给服务器写数据
+                conn.setDoOutput(true);
+                //5.开始向服务器写数据
+                conn.getOutputStream().write(data.getBytes());
+                int code = conn.getResponseCode();
