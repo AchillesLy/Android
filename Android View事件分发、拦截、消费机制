@@ -1,0 +1,714 @@
+日常开发中，我们经常会给各种控件设置点击、触摸事件。如果滑动有冲突，还得去解决滑动冲突，所以对View的事件分发（dispatchTouchEvent）、消费（onTouchEvent）、拦截（onInterceptTouchEvent）进行详细了解必不可少。
+
+先来了解几个概念的东西： 
+注意：为了便于理解与说明，我把onTouchEvent方法理解成为日常生活中的消费，其实在Android源码中，并没有消费这个概念。 
+Touch事件中只有两个对象 View、ViewGroup 
+View的事件：分发（dispatchTouchEvent）、消费（onTouchEvent）。 
+ViewGroup的事件：分发（dispatchTouchEvent）、消费（onTouchEvent）、拦截（onInterceptTouchEvent）。
+
+为什么？ 
+这里写图片描述
+
+结合这张View树状图其实就可以很好的理解了： 
+我们都知道ViewGroup是View的一个集合（ViewGrop又继承自View），而Android在寻找每一个View的时候会去遍历每一个ViewGroup，遍历顺序如上图的数字顺序，每一个ViewGroup负责对自己或者自己容器内的View事件进行分发（dispatchTouchEvent），而View只负责对事件的分发（dispatchTouchEvent）与消费（onTouchEvent）。
+
+事件机制 
+在Android里面，触摸事件（TouchEvent）是使用一个boolean值来表示的，而事件机制分ViewGroup和View；
+
+ViewGroup处理事件的顺序为: 分发（dispatchTouchEvent）、消费（onTouchEvent）、拦截（onInterceptTouchEvent）。 
+View处理事件顺序为: 分发（dispatchTouchEvent）、消费（onTouchEvent）。
+
+分发（dispatchTouchEvent） 
+如其名，对事件进行分发，它是一个返回boolean值得方法，返回false表示事件允许继续分发，而返回 true 则表示该事件不允许继续往下分发；它决定了事件的处理逻辑，ViewGroup中，可以把事件交给自己处理，也能交给它的子View处理。 
+如这样一种场景，我想让Button点击事件“失效”（这里提一下，给View或者ViewGroup设置点击事件监听，其实是在onTouchEven方法里设置的，使onTouchEvent不被调用，setOnClickListener也就失效了） 
+这里我自定义了一个ViewGroup和View 然后重写了 分发、消费、拦截的方法。
+
+MyViewGroup
+
+public class MyViewGroup extends LinearLayout {
+        private static final String TAG = "MyViewGroup";
+
+        public MyViewGroup(Context context, AttributeSet attrs) {
+            super(context, attrs);
+        }
+
+        //分发
+        @Override
+        public boolean dispatchTouchEvent(MotionEvent ev) {
+            int action = ev.getAction();
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    Log.e(TAG, "dispatchTouchEvent ACTION_DOWN");
+                    break;
+                case MotionEvent.ACTION_MOVE:
+//                Log.e(TAG, "dispatchTouchEvent ACTION_MOVE");
+                    break;
+                case MotionEvent.ACTION_UP:
+//                Log.e(TAG, "dispatchTouchEvent ACTION_UP");
+                    break;
+
+                default:
+                    break;
+            }
+            return super.dispatchTouchEvent(ev);
+        }
+
+
+        //消费
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            int action = event.getAction();
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    Log.e(TAG, "onInterceptTouchEvent ACTION_DOWN");
+                    break;
+                case MotionEvent.ACTION_MOVE:
+//                Log.e(TAG, "onInterceptTouchEvent ACTION_MOVE");
+                    break;
+                case MotionEvent.ACTION_UP:
+//                Log.e(TAG, "onInterceptTouchEvent ACTION_UP");
+                    break;
+
+                default:
+                    break;
+            }
+            return super.onTouchEvent(event);
+        }
+
+        //拦截
+        @Override
+        public boolean onInterceptTouchEvent(MotionEvent ev) {
+            int action = ev.getAction();
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    Log.e(TAG, "onTouchEvent ACTION_DOWN");
+                    break;
+                case MotionEvent.ACTION_MOVE:
+//                Log.e(TAG, "onTouchEvent ACTION_MOVE");
+                    break;
+                case MotionEvent.ACTION_UP:
+//                Log.e(TAG, "onTouchEvent ACTION_UP");
+                    break;
+
+                default:
+                    break;
+            }
+            return super.onInterceptTouchEvent(ev);
+        }
+
+    }
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+MyView
+
+public class MyView extends Button {
+    private static final String TAG = "MyView";
+
+    public MyView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        int action = event.getAction();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                Log.e(TAG, "dispatchTouchEvent ACTION_DOWN");
+                break;
+            case MotionEvent.ACTION_MOVE:
+//                Log.e(TAG, "dispatchTouchEvent ACTION_MOVE");
+                break;
+            case MotionEvent.ACTION_UP:
+//                Log.e(TAG, "dispatchTouchEvent ACTION_UP");
+                break;
+
+            default:
+                break;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int action = event.getAction();
+
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                Log.e(TAG, "onTouchEvent ACTION_DOWN");
+                break;
+            case MotionEvent.ACTION_MOVE:
+//                Log.e(TAG, "onTouchEvent ACTION_MOVE");
+                break;
+            case MotionEvent.ACTION_UP:
+//                Log.e(TAG, "onTouchEvent ACTION_UP");
+                break;
+            default:
+                break;
+        }
+        return super.onTouchEvent(event);
+    }
+}
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+使用： 
+xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<fmr.com.vieweventdemo.MyViewGroup xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:id="@+id/myViewGroup"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+  >
+
+    <fmr.com.vieweventdemo.MyView
+        android:id="@+id/myView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="click"
+        />
+
+
+</fmr.com.vieweventdemo.MyViewGroup>
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+Java
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+    private static final String TAG = "MainActivity";
+    private MyView myView;
+    private MyViewGroup myViewGroup;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        myView = (MyView) findViewById(R.id.myView);
+        myViewGroup = (MyViewGroup) findViewById(R.id.myViewGroup);
+        myView.setOnClickListener(this);
+        myViewGroup.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.myView:
+                Log.e(TAG, "myViewClick");
+                break;
+            case R.id.myViewGroup:
+                Log.e(TAG, "myViewGroupClick" );
+                break;
+
+        }
+    }
+}
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+我把自定义的View 也就是那个Button的dispatchTouchEvent返回值改成了true 
+现在我点击我自定义的这个Button 打印：
+
+12-30 12:25:35.022 12509-12509/fmr.com.vieweventdemo E/MyViewGroup: dispatchTouchEvent ACTION_DOWN
+12-30 12:25:35.022 12509-12509/fmr.com.vieweventdemo E/MyViewGroup: onTouchEvent ACTION_DOWN
+12-30 12:25:35.022 12509-12509/fmr.com.vieweventdemo E/MyView: dispatchTouchEvent ACTION_DOWN
+1
+2
+3
+1
+2
+3
+可以发现，并没有调用这个MyView的onTouchEvent的方法，而设置的点击事件监听也没有打印出来，而这个Button也实现了点击“失效”。
+
+消费（onTouchEvent） 
+是一个boolean值得返回方法，这个方法是对View的Touch事件进行“消费”处理，放回false表示这个事件不“消费”，返回true则表示“消费”，“消费”过后，表示这次事件结束了；它主要决定了onClickListener事件是否被响应。 
+注意：一个事件只能被“消费”一次。
+
+我们把MyView中的onTouchEvent返回值改为false，表示这次事件MyView不消费：
+
+ @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int action = event.getAction();
+
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                Log.e(TAG, "onTouchEvent ACTION_DOWN");
+                break;
+            case MotionEvent.ACTION_MOVE:
+//                Log.e(TAG, "onTouchEvent ACTION_MOVE");
+                break;
+            case MotionEvent.ACTION_UP:
+//                Log.e(TAG, "onTouchEvent ACTION_UP");
+                break;
+            default:
+                break;
+        }
+        return false;
+    }
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+点击MyView打印：
+
+12-30 13:34:15.782 15722-15722/fmr.com.vieweventdemo E/MyViewGroup: dispatchTouchEvent ACTION_DOWN
+12-30 13:34:15.792 15722-15722/fmr.com.vieweventdemo E/MyViewGroup: onTouchEvent ACTION_DOWN
+12-30 13:34:15.792 15722-15722/fmr.com.vieweventdemo E/MyView: dispatchTouchEvent ACTION_DOWN
+12-30 13:34:15.792 15722-15722/fmr.com.vieweventdemo E/MyView: onTouchEvent ACTION_DOWN
+12-30 13:34:15.792 15722-15722/fmr.com.vieweventdemo E/MyViewGroup: onInterceptTouchEvent ACTION_DOWN
+12-30 13:34:15.852 15722-15722/fmr.com.vieweventdemo E/MainActivity: myViewGroupClick
+1
+2
+3
+4
+5
+6
+7
+1
+2
+3
+4
+5
+6
+7
+可以看见，myViewClick没有被打印出来，而是打印了myViewGroupClick，至于为什么打印myViewGroup其实很简单了，点击事件是经过MyViewGroup分发的，点击MyView后，发现MyView并不想“消费”这次点击事件，于是MyViewGroup没辙，只能自己“消费”了（有点像一对父子，父亲给儿子买了个苹果，儿子不想吃，只能父亲自己吃了~~~）。
+
+拦截（onInterceptTouchEvent） 
+只有在ViewGroup中才有拦截（interceptTouchEvent）的方法，它是一个返回boolean值得方法，如果返回true表示拦截此次事件，事件由当前的ViewGroup“消费”，返回false表示不拦截。
+
+修改MyViewGroup的onInterceptTouchEvent 使它返回true：
+
+        //拦截
+        @Override
+        public boolean onInterceptTouchEvent(MotionEvent ev) {
+            int action = ev.getAction();
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    Log.e(TAG, "onTouchEvent ACTION_DOWN");
+                    break;
+                case MotionEvent.ACTION_MOVE:
+//                Log.e(TAG, "onTouchEvent ACTION_MOVE");
+                    break;
+                case MotionEvent.ACTION_UP:
+//                Log.e(TAG, "onTouchEvent ACTION_UP");
+                    break;
+
+                default:
+                    break;
+            }
+            return true;
+        }
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+现在无论点击MyViewGroup还是MyView都会打印：
+
+12-30 14:03:56.052 29698-29698/fmr.com.vieweventdemo E/MyViewGroup: dispatchTouchEvent ACTION_DOWN
+12-30 14:03:56.052 29698-29698/fmr.com.vieweventdemo E/MyViewGroup: onTouchEvent ACTION_DOWN
+12-30 14:03:56.052 29698-29698/fmr.com.vieweventdemo E/MyViewGroup: onInterceptTouchEvent ACTION_DOWN
+12-30 14:03:56.152 29698-29698/fmr.com.vieweventdemo E/MainActivity: myViewGroupClick
+1
+2
+3
+4
+1
+2
+3
+4
+好了，事件机制大概是这么个样子了，这里解释下我没有拿出源码片段来说明的原因：我对比了4.4和7.0的源码，发现里面的处理做了很大的改变，比如分发（dispatchTouchEvent）规则，7.0的源码多出了一些判断，而4.4就没有，但是不变的应该是他们的职责，比如分发永远是执行分发的操作，除非高版本的代码不想兼容低版本了，这明显不太可能。所以这里只对方法的职责进行了分析。
