@@ -1,0 +1,101 @@
+startActivityForResult与startActivity的不同之处在于：
+1、startActivity( ) 
+仅仅是跳转到目标页面，若是想跳回当前页面，则必须再使用一次startActivity( )。
+2、startActivityForResult( ) 
+可以一次性完成这项任务，当程序执行到这段代码的时候，假若从T1Activity跳转到下一个Text2Activity，而当这个Text2Activity调用了finish()方法以后，程序会自动跳转回T1Activity，并调用前一个T1Activity中的onActivityResult( )方法。
+
+ 
+
+相关函数:
+startActivityForResult(Intent intent, Int requestCode)
+setResut(int resultCode, Intent intent)
+onActivityResult(int requestCode, int resultCode, Intent intent)
+
+ 
+
+简单例子介绍:
+
+1.跳转的时候不是采用startActivity(intent) 这个方法，而是startActivityForResult(intent, 0)
+
+复制代码
+Intent intent=new Intent();
+intent.setClass(A.this, B.class);
+Bundle bundle=new Bundle();
+String str1="aaaaaa";
+bundle.putString("str1", str1);
+intent.putExtras(bundle);
+startActivityForResult(intent, 0);//这里采用startActivityForResult来做跳转，此处的0为一个依据，可以写其他的值，但一定要>=0
+复制代码
+2.重写onActivityResult方法，用来接收B回传的数据。
+
+复制代码
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+switch (resultCode) { //resultCode为回传的标记，我在B中回传的是RESULT_OK
+   case RESULT_OK:
+    Bundle b=data.getExtras(); //data为B中回传的Intent
+    String str=b.getString("str1");//str即为回传的值
+    break;
+default:
+    break;
+    }
+}
+复制代码
+3.在B中回传数据时采用setResult方法，并且之后要调用finish方法。
+
+setResult(RESULT_OK, intent); //intent为A传来的带有Bundle的intent，当然也可以自己定义新的Bundle
+finish();//此处一定要调用finish()方法
+ 
+
+Android activity的setResult()在什么时候调用(重点也是难点)
+
+如果在startActivityForResult起来的Activity里面设置setResult,结果并不会马上返回给parent的Activity,只有当前Activity被finish,结果才会被发送给parent的onActivityResult去处理!
+
+如果一个activity要返回数据到启动它的那个activity，可以调用setResult()方法。那什么时候去调用setResult()方法返回数据呢？
+看一下源码就明白了：
+
+复制代码
+public final void setResult(int resultCode, Intent data) {
+        synchronized (this) {
+            mResultCode = resultCode;
+            mResultData = data;
+        }
+    }
+
+    public void finish() {
+        if (mParent == null) {
+            int resultCode;
+            Intent resultData;
+            synchronized (this) {
+                resultCode = mResultCode;
+                resultData = mResultData;
+            }
+            if (Config.LOGV) Log.v(TAG, "Finishing self: token=" + mToken);
+            try {
+                if (ActivityManagerNative.getDefault()
+                    .finishActivity(mToken, resultCode, resultData)) {
+                    mFinished = true;
+                }
+            } catch (RemoteException e) {
+                // Empty
+            }
+        } else {
+            mParent.finishFromChild(this);
+        }
+    }
+复制代码
+这段代码可以看出activity返回result是在被finish的时候，也就是说调用setResult()方法必须在finish()之前。
+那么如果在如下方法中调用setResult()也有可能不会返回成功： onPause()， onStop()， onDestroy(),
+因为这些方法调用不一定是在finish之前的，当然在onCreate()就调用setResult肯定是在finish之前的
+
+按BACK键从一个Activity退出来的，一按BACK，android就会自动调用Activity的finish()方法，然后设置resultCode为RESULT_CANCELED，也就不会返回任何数据了 .
+解决方法就是在Activity里面捕获按BACK的事件，捕获到之后先setResult，然后自己来调用finish,就搞定了……把BACK事件直接自己给吞了
+
+复制代码
+@Override
+    public void onBackPressed() {
+        Log.i(TAG, "onBackPressed");
+        setResult(Const.LIVE_OK);
+        super.onBackPressed();
+    }
+复制代码
+当然还可以在onCreate()就调用setResult，不过我觉得这种方法没有重写onBackPressed()方法好.
