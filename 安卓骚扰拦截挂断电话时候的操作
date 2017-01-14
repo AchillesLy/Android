@@ -1,0 +1,42 @@
+挂断电话时候需要执行的操作
+由于在开发的时候谷歌自己屏蔽了api，所以需要自己找到其api再编写出来。
+清单文件添加以下内容
+<uses-permissionandroid:name="Android.permission.CALL_PHONE"/>
+ 
+ 
+       publicvoid endCall() {
+              //ITelephony.Stub.asInterface(ServiceManager.getService(Context.TELEPHONY_SERVICE));
+              try{
+                     Classclazz = getClassLoader().loadClass("android.os.ServiceManager");
+                     Methodmethod = clazz.getDeclaredMethod("getService", String.class);
+                     IBinderiBinder = (IBinder) method.invoke(null, Context.TELEPHONY_SERVICE);
+                     ITelephonyiTelephony = ITelephony.Stub.asInterface(iBinder);
+                     iTelephony.endCall();
+              }catch (Exception e) {
+                     e.printStackTrace();
+              }
+       }
+ 
+删除黑名单的呼叫记录
+ 
+也要在清单文件中加入一下代码
+   <uses-permissionandroid:name="android.permission.READ_CALL_LOG"/>
+<uses-permissionandroid:name="android.permission.WRITE_CALL_LOG"/>
+ 
+public voiddeleteCallLog(final String incomingNumber) {
+              final ContentResolver resolver = getContentResolver();
+              final Uri uri =Uri.parse("content://call_log/calls");
+              //利用内容观察者 观察呼叫记录的数据库,如果生成了呼叫记录就立刻删除呼叫记录
+              resolver.registerContentObserver(uri,true, new ContentObserver(new Handler()) {
+                     @Override
+                     public voidonChange(boolean selfChange) {
+                            //当内容观察者观察到数据库的内容变化的时候调用的方法.
+                            super.onChange(selfChange);
+                            resolver.delete(uri,"number=?", new String[]{incomingNumber});
+                     }
+                    
+              });
+       }
+ 
+ 
+对话框的监听器要写，全路径名
