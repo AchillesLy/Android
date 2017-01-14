@@ -1,0 +1,445 @@
+上一篇学习了okhttp的入门篇，这一篇学习的retrofit底层默认使用的就是okhttp，相信大家多少也听过这个框架，下面我们就来一起学习下，讲真，学会之后这个框架用起来真的很爽，特别灵活。
+
+按照习惯先来说一下它的优缺点
+
+优点：
+
+可以配置不同HTTP client来实现网络请求，如okhttp、httpclient等
+请求的方法参数注解都可以定制
+支持同步、异步和RxJava
+超级解耦
+可以配置不同的反序列化工具来解析数据，如json、xml等
+使用非常方便灵活
+框架使用了很多设计模式(感兴趣的可以看看源码学习学习)
+缺点：
+
+不能接触序列化实体和响应数据
+执行的机制太严格
+使用转换器比较低效
+只能支持简单自定义参数类型
+相关学习资料的网址
+
+retrofit官网：http://square.github.io/retrofit/
+github地址：https://github.com/square/retrofit
+Simple HTTP with Retrofit2:
+https://realm.io/news/droidcon-jake-wharton-simple-http-retrofit-2/
+环境配置
+
+在builde.gradle里面添加上
+
+compile 'com.squareup.retrofit2:retrofit:2.1.0'
+compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+compile 'com.squareup.okhttp3:okhttp:3.4.1'
+在AndroidManifest.xml添加所需权限
+
+<uses-permission android:name="android.permission.INTERNET" />
+基本使用
+
+get异步请求
+
+public interface GitHubService {
+  @GET("users/{user}/repos")
+  Call<ResponseBody> listRepos(@Path("user") String user);
+}
+Retrofit retrofit = new Retrofit.Builder()
+    .baseUrl("https://api.github.com/")
+    .addConverterFactory(GsonConverterFactory.create()) 
+    .build();
+GitHubService service = retrofit.create(GitHubService.class);
+Call<ResponseBody> repos = service.listRepos("octocat");
+repos.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Log.e("APP",response.body().source().toString());
+            }
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
+.baseUrl设置最基本url,也就是http请求的url前缀,可以把项目中重复的前缀用这个来设置
+
+.addConverterFactory(GsonConverterFactory.create())是添加Gson数据解析ConverterFactory,后面会专门介绍下这个，这里就不做过多解释
+
+ResponseBody 这个是okhttp里面的对象，可以直接返回整个字符串，也可以获取流的形式
+
+post异步请求
+
+POST与GET实现基本上是一样的，只是把注解GET换成POST就OK.为了测试POST，专门去网上找了个接口测试，下面就分享给大家,既可以用GET也可以用POST请求
+
+http://www.kuaidi100.com/query?type=快递公司代号&postid=快递单号 
+ps:快递公司编码:申通="shentong" EMS="ems" 顺丰="shunfeng" 圆通="yuantong" 中通="zhongtong" 韵达="yunda" 天天="tiantian" 汇通="huitongkuaidi" 全峰="quanfengkuaidi" 德邦="debangwuliu" 宅急送="zhaijisong"
+拿着这个接口来实现一下POST异步请求
+
+public interface GitHubService {
+    @POST("query")
+    Call<PostQueryInfo> search(@Query("type") String type, @Query("postid") String postid);
+}
+public class PostQueryInfo {
+    private String message;
+    private String nu;
+    private String ischeck;
+    private String com;
+    private String status;
+    private String condition;
+    private String state;
+    private List<DataBean> data;
+    public static class DataBean {
+        private String time;
+        private String context;
+        private String ftime;
+    }
+}
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://www.kuaidi100.com/")
+                .addConverterFactory(GsonConverterFactory.create()) 
+                .build();
+        GitHubService apiService = retrofit.create(GitHubService.class);
+        Call<PostQueryInfo> call = apiService.search("yuantong","500379523313");
+        call.enqueue(new Callback<PostQueryInfo>(){
+            @Override
+            public void onResponse(Call<PostQueryInfo> call,Response<PostQueryInfo> response){
+                 Log.e("APP",response.body().getNu());
+            }
+            @Override
+            public void onFailure(Call<PostQueryInfo> call,Throwable t){
+                t.printStackTrace();
+            }
+        });
+PostQueryInfo实体类省略了get和set方法，大家可以自行快捷键，最终打印返回回来的快递单号，实现POST异步请求就是这么简单
+
+http://www.bejson.com/knownjson/webInterface/这网站里面还有一些其它免费接口，感兴趣的可以去看看
+
+常用注解的使用介绍
+
+上面GitHubService里面的注解大家应该都能猜它的作用了吧，下面就给大家介绍下
+
+@GET和@POST分别是get和post请求。括号里面的value值与上面.baseUrl组成完整的路径
+
+@Path动态的URL访问。像上面get请求中的{user}可以把它当做一个占位符，通过@Path("user")标注的参数进行替换
+
+@Query请求参数。无论是GET或POST的参数都可以用它来实现
+
+@QueryMap请求参数使用Map集合。可以传递一个map集合对象
+
+@Body实体请求参数。顾名思义可以传递一个实体对象来作为请求的参数，不过实体属性要与参数名一一致
+
+@FormUrlEncoded和@Field简单的表单键值对。两个需要结合使用，使用如下：
+
+@FormUrlEncoded
+@POST("user/edit")
+Call<User> updateUser(@Field("first_name") String first, @Field("last_name") String last);
+@Multipart和@PartPOST表单的方式上传文件可以携带参数。两个需要结合使用，使用方式查看下面文件上传中介绍。
+
+@PartMap和@PartPOST表单上传多个文件携带参数。两个结合使用，使用方式查看下面文件上传中介绍。
+
+这里只介绍了一些常用的，大家如果想了解更多可以查看相关文档
+
+文件上传
+
+1、单文件上传携带参数(使用注解@Multipart和@Part)，需要在手机SD卡目录下的Pictures文件夹下添加xuezhiqian.png图片
+@Multipart
+@POST("UploadServlet")
+Call<ResponseBody> uploadfile(@Part MultipartBody.Part photo, @Part("username") RequestBody username, @Part("password") RequestBody password);
+Retrofit retrofitUpload = new Retrofit.Builder()
+                .baseUrl("http://192.168.1.8:8080/UploadFile/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+GitHubService service = retrofitUpload.create(GitHubService.class);
+File file = new File(Environment.getExternalStorageDirectory()+"/Pictures", "xuezhiqian.png");
+//设置Content-Type:application/octet-stream
+RequestBody photoRequestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file);
+//设置Content-Disposition:form-data; name="photo"; filename="xuezhiqian.png"
+MultipartBody.Part photo = MultipartBody.Part.createFormData("photo", file.getName(), photoRequestBody);
+//添加参数用户名和密码，并且是文本类型
+RequestBody userName = RequestBody.create(MediaType.parse("text/plain"), "abc");
+RequestBody passWord = RequestBody.create(MediaType.parse("text/plain"), "123"); 
+Call<ResponseBody> loadCall = service.uploadfile(photo, userName,passWord);
+loadCall.enqueue(new Callback<ResponseBody>() {
+    @Override
+    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+        Log.e("APP", response.body().source().toString());
+    }
+    @Override
+    public void onFailure(Call<ResponseBody> call, Throwable t) {
+        t.printStackTrace();
+    }
+});
+2、多文件上传携带参数(使用注解@PartMap和@Part),需要再在手机SD卡目录下的Pictures文件夹下添加xuezhiqian2.png图片
+
+@Multipart
+@POST("UploadServlet")
+Call<ResponseBody> uploadfile(@PartMap Map<String, RequestBody> params,  @Part("password") RequestBody password);
+Retrofit retrofitUpload = new Retrofit.Builder()
+                .baseUrl("http://192.168.1.8:8080/UploadFile/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+GitHubService service = retrofitUpload.create(GitHubService.class);
+File file = new File(Environment.getExternalStorageDirectory()+"/Pictures", "xuezhiqian.png");
+File file2 = new File(Environment.getExternalStorageDirectory()+"/Pictures", "xuezhiqian2.png");
+RequestBody photoRequestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file);
+RequestBody photoRequestBody2 = RequestBody.create(MediaType.parse("application/octet-stream"), file2);  
+RequestBody userName = RequestBody.create(MediaType.parse("text/plain"), "abc");
+RequestBody passWord = RequestBody.create(MediaType.parse("text/plain"), "123"); 
+Map<String,RequestBody> photos = new HashMap<>();
+//添加文件一
+photos.put("photos\"; filename=\""+file.getName(), photoRequestBody);
+//添加文件二
+photos.put("photos\"; filename=\""+file2.getName(), photoRequestBody2);
+//添加用户名参数
+photos.put("username",  userName);
+Call<ResponseBody> loadCall = service.uploadfile(photos, passWord);
+loadCall.enqueue(new Callback<ResponseBody>() {
+    @Override
+    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+        Log.e("APP", response.body().source().toString());
+    }
+    @Override
+    public void onFailure(Call<ResponseBody> call, Throwable t) {
+        t.printStackTrace();
+    }
+});
+要说明的是，多个文件上传不能像单个文件上传使用MultipartBody.Part对象，而是使用注解@PartMap添加多个RequestBody拼接filename来实现，@part("?")和@Multipart注解已经帮我们设置好成Content-Disposition:form-data; name="?"这样子了，@part里的问号对应name后面的问号，而我们要添加多个文件，则需要在name里面作文章。所以就有了上面MAP集合中的KEY的拼接字符串，我们想设置成Content-Disposition:form-data; name="photo"; filename="xuezhiqian.png",MAP集合KEY的值设置为photo"; filename="xuezhiqian.png替换name后面的问号就OK了,里面的引号在使用的时候需要加上反斜杠转义嵌套使用。
+
+多文件上传携带参数，参考自：
+http://blog.csdn.net/jdsjlzx/article/details/52246114
+
+一直找不到免费上传文件的接口来做测试，我就花了点时间自己做了一个，代码也是参考网上的，这里也给大家贴一下后台核心接收文件保存的代码，希望对大家有所帮助，自己动手丰衣足食。
+
+    /**
+     * 上传文件
+     * @param request
+     * @param response
+     * @throws IOException
+     */
+    @SuppressWarnings("unchecked")
+    private void uploadFile(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("text/html;charset=utf-8");// 设置响应编码
+        request.setCharacterEncoding("utf-8");
+        PrintWriter writer = response.getWriter();// 获取响应输出流
+        //ServletInputStream inputStream = request.getInputStream();// 获取请求输入流
+        /*
+         * 1、创建DiskFileItemFactory对象，设置缓冲区大小和临时文件目录 该类有两个构造方法一个是无参的构造方法，
+         * 另一个是带两个参数的构造方法
+         * 
+         * @param int sizeThreshold,该参数设置内存缓冲区的大小，默认值为10K。当上传文件大于缓冲区大小时，
+         * fileupload组件将使用临时文件缓存上传文件
+         * 
+         * @param java.io.File
+         * repository,该参数指定临时文件目录，默认值为System.getProperty("java.io.tmpdir");
+         * 
+         * 如果使用了无参的构造方法，则使用setSizeThreshold(int
+         * sizeThreshold),setRepository(java.io.File repository) 方法手动进行设置
+         */
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        int sizeThreshold = 1024 * 1024;
+        factory.setSizeThreshold(sizeThreshold);
+        File repository = new File(request.getSession().getServletContext().getRealPath("temp"));
+        // System.out.println(request.getSession().getServletContext().getRealPath("temp"));
+        // System.out.println(request.getRealPath("temp"));
+        factory.setRepository(repository);
+        /*
+         * 2、使用DiskFileItemFactory对象创建ServletFileUpload对象，并设置上传文件的大小
+         * 
+         * ServletFileUpload对象负责处理上传的文件数据，并将表单中每个输入项封装成一个FileItem 该对象的常用方法有：
+         * boolean isMultipartContent(request);判断上传表单是否为multipart/form-data类型
+         * List parseRequest(request);解析request对象，并把表单中的每一个输入项包装成一个fileItem
+         * 对象，并返回一个保存了所有FileItem的list集合 void setFileSizeMax(long
+         * filesizeMax);设置单个上传文件的最大值 void setSizeMax(long sizeMax);设置上传温江总量的最大值
+         * void setHeaderEncoding();设置编码格式，解决上传文件名乱码问题
+         */
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        upload.setHeaderEncoding("utf-8");// 设置编码格式，解决上传文件名乱码问题
+        /*
+         * 3、调用ServletFileUpload.parseRequest方法解析request对象,得到一个保存了所有上传内容的List对象
+         */
+        List<FileItem> parseRequest = null;
+        try {
+            parseRequest = upload.parseRequest(request);
+        } catch (FileUploadException e) {
+            e.printStackTrace();
+        }
+        /*
+         * 4、对list进行迭代，每迭代一个FileItem对象，调用其isFormField方法判断是否是文件上传
+         * true表示是普通表单字段，则调用getFieldName、getString方法得到字段名和字段值
+         * false为上传文件，则调用getInputStream方法得到数据输入流，从而读取上传数据
+         * FileItem用来表示文件上传表单中的一个上传文件对象或者普通的表单对象 该对象常用方法有： boolean
+         * isFormField();判断FileItem是一个文件上传对象还是普通表单对象 true表示是普通表单字段，
+         * 则调用getFieldName、getString方法得到字段名和字段值 false为上传文件，
+         * 则调用getName()获得上传文件的文件名，注意：有些浏览器会携带客户端路径，需要自己减除
+         * 调用getInputStream()方法得到数据输入流，从而读取上传数据 
+         * delete();表示在关闭FileItem输入流后，删除临时文件。
+         */
+        for (FileItem fileItem : parseRequest) {
+            if (fileItem.isFormField()) {// 表示普通字段
+                if ("username".equals(fileItem.getFieldName())) {
+                    String username = fileItem.getString();
+                    writer.write("您的用户名：" + username + "<br>");
+                }
+                if ("password".equals(fileItem.getFieldName())) {
+                    String userpass = fileItem.getString();
+                    writer.write("您的密码：" + userpass + "<br>");
+                }
+            } else {// 表示是上传的文件
+                    // 不同浏览器上传的文件可能带有路径名，需要自己切割
+                String clientName = fileItem.getName();
+                String filename = "";
+                if (clientName.contains("\\\\\\\\")) {// 如果包含"\\\\"表示是一个带路径的名字,则截取最后的文件名
+                    filename = clientName.substring(clientName.lastIndexOf("\\\\\\\\")).substring(1);
+                } else {
+                    filename = clientName;
+                }
+                UUID randomUUID = UUID.randomUUID();// 生成一个128位长的全球唯一标识
+                filename = randomUUID.toString() + filename;
+                /*
+                 * 设计一个目录生成算法，如果所用用户上传的文件总数是亿数量级的或更多，放在同一个目录下回导致文件索引非常慢，
+                 * 所以，设计一个目录结构来分散存放文件是非常有必要，且合理的 将UUID取哈希算法，散列到更小的范围，
+                 * 将UUID的hashcode转换为一个8位的8进制字符串，
+                 * 从这个字符串的第一位开始，每一个字符代表一级目录，这样就构建了一个八级目录，每一级目录中最多有16个子目录
+                 * 这无论对于服务器还是操作系统都是非常高效的目录结构
+                 */
+                int hashUUID = randomUUID.hashCode();
+                String hexUUID = Integer.toHexString(hashUUID);
+                // System.out.println(hexUUID);
+                // 获取将上传的文件存存储在哪个文件夹下的绝对路径
+                String filepath = request.getSession().getServletContext().getRealPath("upload");
+                System.out.println("filePath="+filepath);
+                for (char c : hexUUID.toCharArray()) {
+                    filepath = filepath + "/" + c;
+                }
+                // 如果目录不存在就生成八级目录
+                File filepathFile = new File(filepath);
+                if (!filepathFile.exists()) {
+                    filepathFile.mkdirs();
+                }
+                // 从Request输入流中读取文件，并写入到服务器
+                InputStream inputStream2 = fileItem.getInputStream();
+                // 在服务器端创建文件
+                File file = new File(filepath + "/" + filename);
+                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+                byte[] buffer = new byte[10 * 1024];
+                int len = 0;
+                while ((len = inputStream2.read(buffer, 0, 10 * 1024)) != -1) {
+                    bos.write(buffer, 0, len);
+                }
+                writer.write("您上传文件" + clientName + "成功<br>");
+                // 关闭资源
+                bos.close();
+                inputStream2.close();
+            }
+        }
+        // 注意Eclipse的上传的文件是保存在项目的运行目录，而不是workspace中的工程目录里。
+    }
+其实很简单就是一个servelt,利用了commons-fileupload.jar和commons-io.jar两个库来实现，两个库网上都可以找到
+
+文件下载
+
+可以采用OKHTTP下载文件的方式，利用ResponseBody对象，调用response.body().byteStream()方法获取InputStream输入流，通过写文件操作来实现。
+
+同步请求和结合RxJava的使用
+
+1、同步请求
+
+Call.execute()同步请求网络，要注意的是Android4.0以后不能在主线程里调用，要开一个异步线程来使用，
+Call.enqueue()异步请求网络，加入一个回调，同步异步需要可按照不同的场景来使用。
+Call.cancel()取消此次请求，有一些场景还是会用到该方法的。
+
+2、结合RxJava使用
+
+添加RxJava环境，在builde.gradle里面添加上
+
+compile 'io.reactivex:rxandroid:1.2.1'
+compile 'io.reactivex:rxjava:1.1.6'
+compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
+我们就拿上面post异步请求改成RxJava模式
+
+@POST("query")
+Observable<PostQueryInfo> searchRx(@Query("type") String type, @Query("postid") String postid);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://www.kuaidi100.com/")
+                 //添加数据解析ConverterFactory
+                .addConverterFactory(GsonConverterFactory.create()) 
+                 //添加RxJava
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())   
+                .build();
+        GitHubService apiService = retrofit.create(GitHubService.class);
+        apiService.searchRx("yuantong","500379523313")
+                //访问网络切换异步线程
+                .subscribeOn(Schedulers.io())
+                //响应结果处理切换成主线程
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<PostQueryInfo>() {
+                    @Override
+                    public void onCompleted() {
+                         //请求结束回调
+                    }
+                    @Override
+                    public void onError(Throwable e) {
+                         //错误回调
+                        e.printStackTrace();
+                    }
+                    @Override
+                    public void onNext(PostQueryInfo postQueryInfo) {
+                         //成功结果返回
+                        Log.e("APP",postQueryInfo.getNu());
+                    }
+                });
+可能有些童鞋没接触过RxJava，这里了解一下就可以，后面我会单独写一篇关于RxJava的文章，到时可以再回来看看。
+
+配置设置
+
+配置OKHttp
+
+HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(10000L,TimeUnit.MILLISECONDS)       //设置连接超时
+                .readTimeout(10000L,TimeUnit.MILLISECONDS)          //设置读取超时
+                .writeTimeout(10000L,TimeUnit.MILLISECONDS)         //设置写入超时
+                .cache(new Cache(getCacheDir(),10 * 1024 * 1024))   //设置缓存目录和10M缓存
+                .addInterceptor(interceptor)    //添加日志拦截器（该方法也可以设置公共参数，头信息）
+                .build();
+Retrofit retrofit = new Retrofit.Builder()
+                .client(client)        //设置OkHttp
+                .baseUrl("http://www.kuaidi100.com/")
+                .addConverterFactory(GsonConverterFactory.create()) //  添加数据解析ConverterFactory
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())   //添加RxJava
+                .build();
+...省略后面的代码
+日志拦截器需要添加OkHttp对应库,okhttp的库是3.4.1，这里也需要设成3.4.1
+
+compile 'com.squareup.okhttp3:logging-interceptor:3.4.1'
+多种ConverterFactory设置
+
+常见的ConverterFactory有
+
+Gson: com.squareup.retrofit2:converter-gson:2.1.0
+Jackson: com.squareup.retrofit2:converter-jackson:2.1.0
+Moshi: com.squareup.retrofit2:converter-moshi:2.1.0
+Protobuf: com.squareup.retrofit2:converter-protobuf:2.1.0
+Wire: com.squareup.retrofit2:converter-wire:2.1.0
+Simple XML: com.squareup.retrofit2:converter-simplexml:2.1.0
+Scalars (primitives, boxed, and String): com.squareup.retrofit2:converter-scalars:2.1.0
+添加对应得ConverterFactory只需要先在builde.gradle里面配置好上面对应的库，然后通过.addConverterFactory该方法添加即可
+
+添加混淆
+
+# Platform calls Class.forName on types which do not exist on Android to determine platform.
+-dontnote retrofit2.Platform
+# Platform used when running on RoboVM on iOS. Will not be used at runtime.
+-dontnote retrofit2.Platform$IOS$MainThreadExecutor
+# Platform used when running on Java 8 VMs. Will not be used at runtime.
+-dontwarn retrofit2.Platform$Java8
+# Retain generic type information for use by reflection by converters and adapters.
+-keepattributes Signature
+# Retain declared checked exceptions for use by a Proxy instance.
+-keepattributes Exceptions
+介绍两个好用好玩的AS插件
+
+1、GsonFormat JSON解析成对象
+2、Sexy Editor 工作区间背景设置
+都可以在Preferences下Plugins里搜索到
+
+写在最后的话：
+这篇文章还是花了蛮长时间的，包括期间有一些其它事情耽搁了，加上还是边学边写变测试，虽然花的时间有点长但是我觉得还是学到了蛮多东西的，我相信我能一直坚持学下去，一直写下去。篇幅有点长谢谢大家能够看到最后！
+成功源于不断的学习和积累。
