@@ -1,0 +1,49 @@
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+
+
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.app.Activity;
+import android.view.Menu;
+import android.widget.TextView;
+
+
+public class MainActivity extends Activity {
+private TextView tv;
+// 1.定义一个消息处理器
+private Handler handler = new Handler() {
+// 3.秘书处理器的方法
+public void handleMessage(Message msg) {
+String text = (String) msg.obj;
+tv.setText(text);
+super.handleMessage(msg);
+}
+};
+
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+// 关心控件，创建子线程
+tv = (TextView) findViewById(R.id.tv);
+// 因为主线程里不能动，所以只能玩子线程
+new Thread() {
+public void run() {
+for (int i = 0; i < 10; i++) {
+// 需求，子线程里想更新UI，所以要发信息给秘书要她来帮忙！，然后不能直接在主线程里就创建一个啥了，因为延迟以后会蒙蔽
+Message msg = new Message();
+msg.obj = "哦以哦以哦以哦以哦哟哟哟" + i;
+handler.sendMessage(msg);
+try {
+Thread.sleep(1000);
+} catch (InterruptedException e) {
+// TODO Auto-generated catch block
+e.printStackTrace();
+}
+}
+}
+}.start();
+}
+}
