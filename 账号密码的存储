@@ -1,0 +1,48 @@
+1.首先，直接用io流的形式，输入“info.txt”，会报异常
+ 
+ 
+2.因为在安卓中应用程序会把文件储存在自己私有的文件夹里面
+所以在保存数据的时候，会有特殊的写法，如下：
+/date/date/<包名>...
+/date/date/com.itheimalogin/info.txt.(ly思考，若是储存的是图片应该是怎么搞得？)
+
+
+3.如何回显到应用程序的登陆界面
+要在onCreate方法里面写入，文件输出流， 
+try {
+				//File file = new File("/data/data/com.itheima.qqlogin/files/info.txt");
+        ly下面这是同一种储存形式，提示说不要硬件码目录（not hardcode）usegetDir()
+			    //ly如果是保存在sd卡上就是
+                /mnt/sdcard/info.txt
+                File file = new File(getFilesDir()//ly返回文件系统的绝对路径, "info.txt");
+                this上下文还有获取别的方法的操作，getasset，getresource
+                getCahceDir（），这个或许就是到时候在清除缓存的时候会去掉的，答案是是的！
+                
+				FileOutputStream fos = new FileOutputStream(file);
+				// 10000##abc
+				fos.write((qq + "##" + pwd).getBytes());
+				fos.close();
+				Toast.makeText(this, "数据保存成功", 0).show();
+			} catch (Exception e) {
+				e.printStackTrace();
+				Toast.makeText(this, "数据保存失败", 0).show();
+			}
+进入应用程序如果本地文件存在，则读取文件将账号和密码回显出来：
+File file = new File(this.getFilesDir(), "info.txt");
+		if (file.exists() && file.length() > 0) {
+			try {
+				FileInputStream fis = new FileInputStream(file);
+BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+				// 10000##abc  10086####ab
+				String info = br.readLine();
+				String qq = info.split("##")[0];
+				String pwd = info.split("##")[1];
+				et_qq.setText(qq);
+				et_password.setText(pwd);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+	}
+注意尽量用getFileDir()来获取/data/data/包名/files/，而不是直接写全路径。         
+补充：getCacheDir()代表的是/data/data/包名/cache/,缓存目录，保存一些临时的数据，可以随时删掉不影响程序的逻辑。
+可以通过File Explorer窗口查看文件是否写入成功：
