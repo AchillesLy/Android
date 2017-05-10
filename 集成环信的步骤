@@ -1,0 +1,10 @@
+1，首先将sdk文件夹里面的所有文件都拷贝到libs里面
+2，在配置文件里面添加配置
+3，初始化sdk(注意此处需要配置application《其中是为了做一个全局的初始化，优先于控件的初始化而初始化的》，清单文件里面）
+	3.1就是在application里面加入初始化环信的方法，代码 
+	3.2 如果app里面已经有了第三方的sdk，那就需要添加另外一些代码
+	3.3在配置文件中添加process，就是添加新的进程，也就是说，如果对app的内存需求比较大的时候就要开启新的进程
+4，开始写闪屏界面，从闪屏界面里面就需要用到mvp还有闪屏界面，抽取抽象类，继承appcomtactivity
+	4.1
+	封装activity之间跳转时的方法
+	 public void startActivity(Class clazz,boolean isFinish) 
