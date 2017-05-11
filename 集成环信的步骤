@@ -8,3 +8,5 @@
 	4.1
 	封装activity之间跳转时的方法
 	 public void startActivity(Class clazz,boolean isFinish) 
+	 第二天开始
+	 4.2
