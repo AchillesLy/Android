@@ -10,3 +10,29 @@
 	 public void startActivity(Class clazz,boolean isFinish) 
 	 第二天开始
 	 4.2
+5，注册mvp的搭建
+	5.1给ui绑定监听事件.setOnEditorActionListener(),在括号绑定完成的时候记得实现接口
+	这个mvp的模式跟我以前在工作中的所做的不一样，不过好在全都是调用接口，是有必要拿源码回来看看的
+	
+	
+	
+6.线程池的工具类，涉及到了线程池已经handler的一些基础知识。
+
+7登陆逻辑
+	 7.1onNewintent就是在重新启动的时候，数据的重新传递
+	（前提是在singletop和singletask的前提上）
+	7.2动态申请权限
+	activityCompat
+	
+8地步导航栏和侧面菜单栏的添加
+	8.1menu添加的方法可就牛逼了yo,在res里面新建menu，然后再xml文件里面写item,这都是以前开发的时候没有遇到的需求
+	在onCreatOptionsMenu方法里面写入
+	getMenuInflater().inflate(R.menu.main,menu);
+	Return true;
+	Return super.onCreateOptionsMenu(menu);删除
+	onprepareOptionsMenu（Menu menu）{
+	MenuBuilder builder = （MenuBuilder）menu；
+	builder。setOptionalInconsVisible（true）；
+	Return true；
+	}
+	8.2初始化navigationbar
