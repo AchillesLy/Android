@@ -1,0 +1,448 @@
+相对布局时经常用到
+android:layout_above 将该控件的底部至于给定ID的控件之上
+android:layout_below 将该控件的顶部至于给定ID的控件之下
+android:layout_toLeftOf 将该控件的右边缘和给定ID的控件的左边缘对齐
+android:layout_toRightOf 将该控件的左边缘和给定ID的控件的右边缘对齐
+
+android:layout_alignBaseline 该控件的baseline和给定ID的控件的baseline对齐
+android:layout_alignBottom 将该控件的底部边缘与给定ID控件的底部边缘对齐
+android:layout_alignLeft 将该控件的左边缘与给定ID控件的左边缘对齐
+android:layout_alignRight 将该控件的右边缘与给定ID控件的右边缘对齐
+android:layout_alignTop 将给定控件的顶部边缘与给定ID控件的顶部对齐
+
+android:layout_alignParentBottom 如果该值为true，则将该控件的底部和父控件的底部对齐
+android:layout_alignParentLeft 如果该值为true，则将该控件的左边与父控件的左边对齐
+android:layout_alignParentRight 如果该值为true，则将该控件的右边与父控件的右边对齐
+android:layout_alignParentTop 如果该值为true，则将空间的顶部与父控件的顶部对齐
+
+android:layout_centerHorizontal 如果值为真，该控件将被至于水平方向的中央
+android:layout_centerInParent 如果值为真，该控件将被至于父控件水平方向和垂直方向的中央
+android:layout_centerVertical 如果值为真，该控件将被至于垂直方向的中央
+
+android：layout_marginLeft 设置距离父窗体左边的距离
+android：layout_marginTop 设置距离父窗体顶部的距离
+android：layout_marginRight 设置距离父窗体右边的距离
+android：layout_marginBottom 设置距离父窗体底部的距离
+
+细说一下Android:background这个属性：它既可以是一幅图片，亦可以是定义的xml文件，如Shape等。在drawable目录下新建一个xml文件，命名为myshape.xml文件，内容如下：
+[html] view plain copy
+<shape xmlns:android="http://schemas.android.com/apk/res/android" >  
+  
+    <!-- 渐变 -->  
+    <gradient  
+        android:angle="90"  
+        android:centerColor="#fa127689"  
+        android:endColor="#6000aeef"  
+        android:startColor="#ff0000ff" />  
+    <!-- 描边 -->  
+    <stroke  
+        android:width="1dp"  
+        android:color="#ffffff" />  
+    <!-- 圆角 -->  
+    <corners android:radius="4dp" />  
+  
+</shape>  
+
+再新建一个设置成myshape1.xml：
+[html] view plain copy
+<shape xmlns:android="http://schemas.android.com/apk/res/android" >  
+  
+    <!-- 渐变 -->  
+    <gradient  
+        android:angle="90"  
+        android:centerColor="#fa127689"  
+        android:endColor="#6000aeef"  
+        android:startColor="#ffcc00ff" />  
+    <!-- 描边 -->  
+    <stroke  
+        android:dashGap="2dp"  
+        android:dashWidth="3dp"  
+        android:width="1dp"  
+        android:color="#ffffff" />  
+    <!-- 圆角 -->  
+    <corners  
+        android:bottomLeftRadius="15dp"  
+        android:bottomRightRadius="15dp"  
+        android:topLeftRadius="15dp"  
+        android:topRightRadius="15dp" />  
+  
+</shape>  
+
+然后设置到相应的控件中：
+[html] view plain copy
+<?xml version="1.0" encoding="utf-8"?>  
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"  
+    android:layout_width="fill_parent"  
+    android:layout_height="fill_parent"  
+    android:orientation="vertical" >  
+  
+    <EditText  
+        android:id="@+id/myInput"  
+        android:layout_width="fill_parent"  
+        android:layout_height="wrap_content" />  
+  
+    <Button  
+        android:id="@+id/myButton"  
+        android:layout_width="fill_parent"  
+        android:layout_height="wrap_content"  
+        android:layout_marginBottom="3dp"  
+        android:layout_marginLeft="5dp"  
+        android:layout_marginRight="5dp"  
+        android:layout_marginTop="3dp"  
+        android:background="@drawable/myshape"  
+        android:text="Next" />  
+  
+    <TextView  
+        android:id="@+id/myTextView"  
+        android:layout_width="fill_parent"  
+        android:layout_height="wrap_content"  
+        android:layout_marginLeft="5dp"  
+        android:layout_marginRight="5dp"  
+        android:background="@drawable/myshape1"  
+        android:paddingBottom="5dp"  
+        android:paddingLeft="5dp"  
+        android:paddingRight="5dp"  
+        android:paddingTop="5dp"   
+        android:gravity="center"/>  
+  
+</LinearLayout>  
+
+效果如下图：
+
+Shape中的属性含义：
+gradient：渐变
+android:startColor  起始颜色
+android:centerColor  中间颜色
+android:endColor  结束颜色
+android:angle  渐变角度，必须为45的整数倍
+渐变模式默认为android:type="linear"，线性渐变，可选： "radial"  径向渐变  "sweep" 角度渐变
+径向渐变需要指定半径android:gradientRadius="50"。
+
+
+stroke：描边
+android:width="2dp"描边的宽度
+android:color 描边的颜色
+虚线描边：
+android:dashWidth="3dp" 虚线长
+android:dashGap="2dp"  虚线间隔
+
+
+corners：圆角
+android:radius  4个角的弧度
+四个角设定不同的角度：
+android:topRightRadius="10dp" 右上角
+android:bottomLeftRadius="10dp" 右下角 
+android:topLeftRadius="10dp" 左上角
+android:bottomRightRadius="10dp" 左下角
+
+按钮可以与selector结合应用，如：
+[html] view plain copy
+<selector xmlns:android="http://schemas.android.com/apk/res/android">  
+<item android:state_pressed="false">  
+    <!-- 定义当控件 处于没有按下时的形态。 -->  
+    <shape >  
+    <!-- 渐变 -->  
+    <gradient  
+        android:angle="90"  
+        android:centerColor="#fa127689"  
+        android:endColor="#6000aeef"  
+        android:startColor="#ffcc00ff" />  
+    <!-- 描边 -->  
+    <stroke  
+        android:dashGap="2dp"  
+        android:dashWidth="3dp"  
+        android:width="1dp"  
+        android:color="#ffffff" />  
+    <!-- 圆角 -->  
+    <corners  
+        android:bottomLeftRadius="15dp"  
+        android:bottomRightRadius="15dp"  
+        android:topLeftRadius="15dp"  
+        android:topRightRadius="15dp" />  
+  
+</shape>  
+</item>  
+<item android:state_pressed="true">  
+    <!-- 定义当控件按下时的形态  -->  
+    <shape >  
+    <!-- 渐变 -->  
+    <gradient  
+        android:angle="45"  
+        android:centerColor="#88ff0000"  
+        android:endColor="#6000aeef"  
+        android:startColor="#ffcc00ff" />  
+    <!-- 描边 -->  
+    <stroke  
+        android:dashGap="2dp"  
+        android:dashWidth="3dp"  
+        android:width="1dp"  
+        android:color="#ffffff" />  
+    <!-- 圆角 -->  
+    <corners  
+        android:bottomLeftRadius="3dp"  
+        android:bottomRightRadius="3dp"  
+        android:topLeftRadius="3dp"  
+        android:topRightRadius="3dp" />  
+  
+    </shape>  
+</item>  
+</selector>  
+
+selector对应的相关事件还有：
+android:state_selected是选中
+android:state_focused是获得焦点
+android:state_pressed是点击
+android:state_enabled是设置是否响应事件,指所有事件
+
+附录：
+常用的基本控件
+1、与文本有关：Textview、EidtText、CheckedTextView等
+
+Textview：
+android：textColor=""设置文本颜色
+android：backGround=“”设置背景色
+android：textStyle=“bold”设置文本粗体
+android：paddingLeft=“”设置文字距离TextView左边框的距离
+android：autoLink=“web（email）”设置超链接（网址、邮箱）
+android：autoLink=“phone”设置超链接（打电话）		
+android：textAppearance“@android：----”设置字体
+android：singleline=“true”设置文本不换行
+android：layout_gravicty=“”控件居于父窗体的位置
+android：layout_marginTop=“100dp”设置距离父窗体顶部距离
+
+EidtText:
+android:hint="XXXXXXXX"设置编辑框内提示信息
+android:lines=“10”设置编辑框的行数为10行
+android:gravicty=“0dp”设置编辑框内的光标位于顶端，从顶端输入
+android:password=“true”设置密码
+android:phoneNumber=“true”设置文本只能输入数字
+android:backGround=“@xxxxx/xxxxxx”设置输入框背景
+注意它们的区别：
+android:layout_marginLeft指该控件距离边父控件的边距，
+android:paddingLeft指该控件内部内容，如文本距离该控件的边距。
+
+2、与图片有关：imageView、ImageButton（效率高但不能加文字）
+ImageButton继承自ImageView，他们都是显示图片
+imageView：
+android：scr=“@drawable/xxxx”加入图片，图片多大显示多大
+android:background=“@drawable/xxx”加入图片，背景多大，图片显示多大
+android:scaleType=“matrix或fitxy”缩放类型（matrix矩阵）（fitxy）X，Y轴比例缩放（fitcenter居于中间开始缩放不变形）（center居于控件正中间不缩放）（centerCrop显示图片中间部分）（centerinsid内嵌效果）
+ImageButton：具有图片的按钮
+
+3、与用户点击有关：Button、checkbox、radioButton、ToggleButton等后3者都是Button的子孙类、这4者都是textview的子孙类
+
+Button：
+android：text=""设置文本
+android：textColor=""设置文本颜色
+android：clickable=“false”按钮不点击
+android：focusable=“true”获得焦点
+android:visibility=“visible”按钮可见
+android:visibility=“invisible”不可见但占用位置
+android:visibility=“gone”不可见不占用位置
+android:background=“@xxx/xxx”添加背景图片，图片可根据按钮大小变化
+
+android:layout_width     设置组件的宽度
+android:layout_height    设置组件的高度
+android:id               给组件定义一个id值，供后期使用
+android:background       设置组件的背景颜色或背景图片
+android:text             设置组件的显示文字
+android:textColor        设置组件的显示文字的颜色
+android:layout_below     组件在参考组件的下面
+android:alignTop         同指定组件的顶平行
+android:maxLength="6"    限制输入字数
+android:digits='012356789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'限制输入数字和大写小写字母
+1. 开发更简单，执行速度高效。 
+2. 输入法默认会根据情况变动，比如说设置为numeric后输入法会自动仅显示数字，不会出现Qwerty中的字母。
+下面我们通过EditText的layout xml文件中的相关属性来实现:
+  1. 密码框属性 android:password='true'  这条可以让EditText显示的内容自动为 星号，输入时内容会在1秒内变成*字样。
+  2. 纯数字 android:numeric='true' 这条可以让输入法自动变为数字输入键盘，同时仅允许0-9的数字输入
+  3. 仅允许 android:capitalize='passwd123' 这样仅允许接受输入passwd123，一般用于密码验证
+ 
+下面是一些扩展的风格属性
+android:editable='false' 设置EditText不可编辑
+android:singleLine='true' 强制输入的内容在单行
+android:ellipsize='end' 自动隐藏尾部溢出数据，一般用于文字内容过长一行无法全部显示时。 
+android:autoLink
+ 设置是否当文本为URL链接/email/电话号码/map时，文本显示为可点击的链接。可选值(none/web/email/phone/map/all)
+ 
+android:autoText
+ 如果设置，将自动执行输入值的拼写纠正。此处无效果，在显示输入法并输入的时候起作用。
+ 
+android:bufferType
+ 指定getText()方式取得的文本类别。选项editable 类似于StringBuilder可追加字符，
+也就是说getText后可调用append方法设置文本内容。spannable 则可在给定的字符区域使用样式，参见这里1、这里
+android:capitalize
+设置英文字母大写类型。此处无效果，需要弹出输入法才能看得到，参见EditText此属性说明。
+ 
+android:cursorVisible
+ 设定光标为显示/隐藏，默认显示。
+ 
+android:digits
+ 设置允许输入哪些字符。如“1234567890.+-*/%\n()”
+ 
+android:drawableBottom
+ 在text的下方输出一个drawable，如图片。如果指定一个颜色的话会把text的背景设为该颜色，并且同时和background使用时覆盖后者。
+ 
+android:drawableLeft
+ 在text的左边输出一个drawable，如图片。
+ 
+android:drawablePadding
+ 设置text与drawable(图片)的间隔，与drawableLeft、drawableRight、drawableTop、drawableBottom一起使用，可设置为负数，单独使用没有效果。
+ 
+android:drawableRight
+ 在text的右边输出一个drawable，如图片。
+ 
+android:drawableTop
+ 在text的正上方输出一个drawable，如图片。
+ 
+android:editable
+ 设置是否可编辑。这里无效果，参见EditView。
+ 
+android:editorExtras
+ 设置文本的额外的输入数据。在EditView再讨论。
+ 
+android:ellipsize
+ 设置当文字过长时,该控件该如何显示。有如下值设置：”start”—–省略号显示在开头；”end”——省略号显示在结尾；”middle”—-省略号显示在中间；”marquee” ——以跑马灯的方式显示(动画横向移动)
+ 
+android:freezesText
+ 设置保存文本的内容以及光标的位置。参见：这里。
+ 
+android:gravity
+ 设置文本位置，如设置成“center”，文本将居中显示。
+ 
+android:hint
+ Text为空时显示的文字提示信息，可通过textColorHint设置提示信息的颜色。此属性在EditView中使用，但是这里也可以用。
+ 
+android:imeOptions
+ 附加功能，设置右下角IME动作与编辑框相关的动作，如actionDone右下角将显示一个“完成”，而不设置默认是一个回车符号。这个在EditText中再详细说明，此处无用。
+ 
+android:imeActionId
+ 设置IME动作ID。在EditText再做说明，可以先看这篇帖子：这里。
+ 
+android:imeActionLabel
+ 设置IME动作标签。在EditText再做说明。
+ 
+android:includeFontPadding
+ 设置文本是否包含顶部和底部额外空白，默认为true。
+ 
+android:inputMethod
+ 为文本指定输入法，需要完全限定名（完整的包名）。例如：com.google.android.inputmethod.pinyin，但是这里报错找不到。
+ 
+android:inputType
+ 设置文本的类型，用于帮助输入法显示合适的键盘类型。在EditText中再详细说明，这里无效果。
+ 
+android:linksClickable
+ 设置链接是否点击连接，即使设置了autoLink。
+ 
+android:marqueeRepeatLimit
+ 在ellipsize指定marquee的情况下，设置重复滚动的次数，当设置为marquee_forever时表示无限次。
+ 
+android:ems
+ 设置TextView的宽度为N个字符的宽度。这里测试为一个汉字字符宽度，如图：
+ 
+android:maxEms
+ 设置TextView的宽度为最长为N个字符的宽度。与ems同时使用时覆盖ems选项。
+ 
+android:minEms
+ 设置TextView的宽度为最短为N个字符的宽度。与ems同时使用时覆盖ems选项。
+ 
+android:maxLength
+ 限制显示的文本长度，超出部分不显示。
+ 
+android:lines
+ 设置文本的行数，设置两行就显示两行，即使第二行没有数据。
+ 
+android:maxLines
+ 设置文本的最大显示行数，与width或者layout_width结合使用，超出部分自动换行，超出行数将不显示。
+ 
+android:minLines
+ 设置文本的最小行数，与lines类似。
+ 
+android:lineSpacingExtra
+ 设置行间距。
+ 
+android:lineSpacingMultiplier
+ 设置行间距的倍数。如”1.2”
+ 
+android:numeric
+ 如果被设置，该TextView有一个数字输入法。此处无用，设置后唯一效果是TextView有点击效果，此属性在EditText将详细说明。
+ 
+android:password
+ 以小点”.”显示文本
+ 
+android:phoneNumber
+ 设置为电话号码的输入方式。
+ 
+android:privateImeOptions
+ 设置输入法选项，此处无用，在EditText将进一步讨论。
+ 
+android:scrollHorizontally
+ 设置文本超出TextView的宽度的情况下，是否出现横拉条。
+ 
+android:selectAllOnFocus
+ 如果文本是可选择的，让他获取焦点而不是将光标移动为文本的开始位置或者末尾位置。EditText中设置后无效果。
+ 
+android:shadowColor
+ 指定文本阴影的颜色，需要与shadowRadius一起使用。效果：
+ 
+android:shadowDx
+ 设置阴影横向坐标开始位置。
+ 
+android:shadowDy
+ 设置阴影纵向坐标开始位置。
+ 
+android:shadowRadius
+ 设置阴影的半径。设置为0.1就变成字体的颜色了，一般设置为3.0的效果比较好。
+ 
+android:singleLine
+ 设置单行显示。如果和layout_width一起使用，当文本不能全部显示时，后面用“…”来表示。如android:text="test_ singleLine " android:singleLine="true" android:layout_width="20dp"将只显示“t…”。如果不设置singleLine或者设置为false，文本将自动换行
+ 
+android:text
+ 设置显示文本.
+ 
+android:textAppearance
+ 设置文字外观。如“?android:attr/textAppearanceLargeInverse
+”这里引用的是系统自带的一个外观，？表示系统是否有这种外观，否则使用默认的外观。可设置的值如下：textAppearanceButton/textAppearanceInverse/textAppearanceLarge/textAppearanceLargeInverse/textAppearanceMedium/textAppearanceMediumInverse/textAppearanceSmall/textAppearanceSmallInverse
+ 
+android:textColor
+ 设置文本颜色
+ 
+android:textColorHighlight
+ 被选中文字的底色，默认为蓝色
+ 
+android:textColorHint
+ 设置提示信息文字的颜色，默认为灰色。与hint一起使用。
+ 
+android:textColorLink
+ 文字链接的颜色.
+ 
+android:textScaleX
+ 设置文字之间间隔，默认为1.0f。分别设置0.5f/1.0f/1.5f/2.0f效果如下：
+ 
+ 
+android:textSize
+ 设置文字大小，推荐度量单位”sp”，如”15sp”
+ 
+android:textStyle
+ 设置字形[bold(粗体) 0, italic(斜体) 1, bolditalic(又粗又斜) 2] 可以设置一个或多个，用“|”隔开
+ 
+android:typeface
+ 设置文本字体，必须是以下常量值之一：normal 0, sans 1, serif 2, monospace(等宽字体) 3]
+ 
+android:height
+ 设置文本区域的高度，支持度量单位：px(像素)/dp/sp/in/mm(毫米)
+ 
+android:maxHeight
+ 设置文本区域的最大高度
+ 
+android:minHeight
+ 设置文本区域的最小高度
+ 
+android:width
+ 设置文本区域的宽度，支持度量单位：px(像素)/dp/sp/in/mm(毫米)，与layout_width的区别看这里。
+ 
+android:maxWidth
+ 设置文本区域的最大宽度
+ 
+android:minWidth
+ 设置文本区域的最小宽度
