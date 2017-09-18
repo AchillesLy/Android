@@ -1,0 +1,37 @@
+ try {
+                    mPacketview.setText("");
+                    addSpan(mPacketview, "已累计签到", 12, Color.parseColor("#666666"));
+                    addSpan(mPacketview, "" + currentDay, 20, Color.parseColor("#f12235"));
+                    addSpan(mPacketview, "天,再签", 12, Color.parseColor("#666666"));
+                    addSpan(mPacketview, "" + (leftDay + 1), 20, Color.parseColor("#f12235"));
+                    addSpan(mPacketview, "天获得大礼包", 12, Color.parseColor("#666666"));
+                    if (leftDay == 0) {
+                        //是大礼包的当天(TextView没有清空的方法先设置为空)
+                        mPacketview.setText("");
+                        addSpan(mPacketview, "已累计签到", 12, Color.parseColor("#666666"));
+                        addSpan(mPacketview, "" + currentDay, 20, Color.parseColor("#f12235"));
+                        addSpan(mPacketview, "天,立即签到获取大礼包", 12, Color.parseColor("#666666"));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                
+                
+                
+                
+                   /**
+     * 添加不同颜色,不同大小的的字体
+     *
+     * @param textView
+     * @param text
+     * @param size
+     * @param color
+     */
+    private void addSpan(TextView textView, String text, int size, int color) {
+        SpannableString spanString = new SpannableString(text);
+        ForegroundColorSpan span = new ForegroundColorSpan(color);
+        AbsoluteSizeSpan span2 = new AbsoluteSizeSpan(AppHelper.dip2px(getActivity(), size));
+        spanString.setSpan(span, 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spanString.setSpan(span2, 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        textView.append(spanString);
+    }
