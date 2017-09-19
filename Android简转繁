@@ -1,0 +1,45 @@
+1
+
+导入JChineseConvertor包
+
+2
+
+封装方法
+
+ /**
+     * 简体转繁体
+     *
+     * @param str
+     */
+    public static String s2t(Context context, String str) {
+        if (str == null) {
+            return null;
+        }
+        try {
+            JChineseConvertor convertor = JChineseConvertor.getInstance(context);
+            str = convertor.s2t(str);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return str;
+    }
+    
+    3
+    在不同情景下的工具
+     if (2 == SharedPreferencesUtil.get(context, AppConstants.MULTI_LANGUAGE_CHANGE,2)) {
+            mTitle.setText(AppHelper.s2t(context,title));
+        }else {
+            mTitle.setText(title);
+        }
+
+
+private void Simple2Tradition() {
+        //判断是否需要转换成繁体
+        if (SharedPreferencesUtil.get(this, AppConstants.MULTI_LANGUAGE_CHANGE,2) == 2) {
+            List<Integer> list = new ArrayList<>();
+            list.add(R.id.tv_user_info_name);
+            list.add(R.id.user_info_coin_tv);
+       
+            s2tUtils.s2tlanguage(this,list);
+        }
+    }
