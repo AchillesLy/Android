@@ -1,0 +1,3 @@
+et_name = (EditText) findViewById(R.id.et_name);  
+        SpannableString s = new SpannableString("你好呀 小美人");//这里输入自己想要的提示文字  
+        et_name.setHint(s);  
