@@ -1,0 +1,28 @@
+在Android 界面组成一文中，描述说DecorView是一个FrameLayout，其中在PhoneWindow中还包含了一个mContentParent，是对DecorView布局中的ID
+为 content的FrameLayout的实例化，因此我们可以通过对mContentParent 进行addView操作，将一个View绘制在Activity上层
+
+1.获取DecorView
+
+ View decorView = getWindow().getDecorView();
+ 
+2.获取ContentParent
+ 
+ FrameLayout contentParent = 
+(FrameLayout) decorView.findViewById(android.R.id.content);
+
+3.将View添加到contentParent上
+
+TextView x = new TextView(this);
+x.setText("这是一个TextView\n通过DecorView将其绘制到了Activity上层");
+x.setGravity(Gravity.CENTER);
+x.setBackgroundColor(Color.RED);
+x.setLayoutParams(
+        new ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            200));
+contentParent.addView(x);
+
+作者：程树欣
+链接：http://www.jianshu.com/p/62f6a678024a
+來源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
